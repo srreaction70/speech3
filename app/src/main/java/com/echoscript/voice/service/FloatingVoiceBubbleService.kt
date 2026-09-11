@@ -268,35 +268,45 @@ class FloatingVoiceBubbleService : Service() {
     }
 
     private fun toggleSpeechRecognition(textView: TextView?, pulseRing: View?) {
-        if (speechManager.isListening.value) {
-            speechManager.stopListening()
+        if (speechManager.isRecording.value) {
+            // Stop recording & transcribe
             pulseRing?.visibility = View.GONE
-            Toast.makeText(this, "ضبط متوقف شد", Toast.LENGTH_SHORT).show()
+            textView?.visibility = View.VISIBLE
+            textView?.text = "⏳ در حال تبدیل گفتار ضبط‌شده به متن با هوش مصنوعی..."
+            
+            serviceScope.launch {
+                val audioFile = speechManager.stopListening()
+                val base64 = speechManager.getRecordedAudioBase64()
+                if (base64.isNullOrEmpty()) {
+                    textView?.text = "صدایی برای پردازش یافت نشد."
+                    return@launch
+                }
+
+                try {
+                    val transcribed = withContext(Dispatchers.IO) {
+                        geminiRepo.transcribeAudio(base64, "audio/mp4")
+                    }
+                    if (transcribed.isNotBlank()) {
+                        currentExtractedText = transcribed
+                        textView?.text = transcribed
+                        copyToClipboard(transcribed, "متن آماده و کپی شد 📋")
+                    } else {
+                        textView?.text = "متنی شناسایی نشد."
+                    }
+                } catch (e: Exception) {
+                    textView?.text = "خطا در پردازش هوش مصنوعی: ${e.localizedMessage}"
+                } finally {
+                    speechManager.cleanup()
+                }
+            }
         } else {
+            // Start continuous recording
             speechManager.clearText()
             currentExtractedText = ""
             textView?.visibility = View.VISIBLE
-            textView?.text = "در حال شنیدن صدای شما... صحبت کنید..."
+            textView?.text = "🎙️ در حال ضبط پیوسته... (بدون توقف) صحبت کنید. پس از پایان، دکمه میکروفون را بزنید 🛑"
             pulseRing?.visibility = View.VISIBLE
             speechManager.startListening()
-
-            serviceScope.launch {
-                speechManager.partialText.collect { partial ->
-                    if (partial.isNotBlank()) {
-                        textView?.text = partial
-                    }
-                }
-            }
-
-            serviceScope.launch {
-                speechManager.finalText.collect { final ->
-                    if (final.isNotBlank()) {
-                        currentExtractedText = final
-                        textView?.text = final
-                        copyToClipboard(final, "گفتار به متن تبدیل و کپی شد 📋")
-                    }
-                }
-            }
         }
     }
 

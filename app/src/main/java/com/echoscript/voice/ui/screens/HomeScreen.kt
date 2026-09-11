@@ -5,8 +5,10 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.widget.Toast
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -24,6 +26,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.echoscript.voice.viewmodel.MainViewModel
@@ -36,20 +39,19 @@ fun HomeScreen(
     onToggleFloatingBubble: () -> Unit
 ) {
     val context = LocalContext.current
-    val isListening by viewModel.isListening.collectAsState()
-    val partialText by viewModel.partialText.collectAsState()
-    val finalText by viewModel.finalText.collectAsState()
+    val isRecording by viewModel.isRecording.collectAsState()
     val isProcessingAI by viewModel.isProcessingAI.collectAsState()
+    val durationFormatted by viewModel.durationFormatted.collectAsState()
+    val statusMessage by viewModel.statusMessage.collectAsState()
+    val finalText by viewModel.finalText.collectAsState()
     val promptEnhancerEnabled by viewModel.promptEnhancerEnabled.collectAsState()
 
-    val displayText = remember(finalText, partialText) {
-        if (partialText.isNotBlank()) "$finalText $partialText".trim() else finalText
-    }
+    val displayText = finalText
 
     val infiniteTransition = rememberInfiniteTransition(label = "mic_pulse")
     val pulseScale by infiniteTransition.animateFloat(
         initialValue = 1f,
-        targetValue = if (isListening) 1.25f else 1f,
+        targetValue = if (isRecording) 1.22f else 1f,
         animationSpec = infiniteRepeatable(
             animation = tween(800, easing = FastOutSlowInEasing),
             repeatMode = RepeatMode.Reverse
@@ -86,7 +88,7 @@ fun HomeScreen(
                         color = MaterialTheme.colorScheme.onPrimaryContainer
                     )
                     Text(
-                        text = "تایپ صوتی و پرامپت‌ساز روی تلگرام، واتساپ، کروم و چت‌بات‌ها",
+                        text = "تایپ صوتی در تلگرام، واتساپ، ایتا و مرورگر بدون ترک برنامه",
                         fontSize = 12.sp,
                         color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
                     )
@@ -100,7 +102,35 @@ fun HomeScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Recording Status & Live Duration Pill
+        AnimatedVisibility(visible = isRecording) {
+            Surface(
+                color = MaterialTheme.colorScheme.errorContainer,
+                shape = RoundedCornerShape(50.dp),
+                modifier = Modifier.padding(bottom = 12.dp)
+            ) {
+                Row(
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(10.dp)
+                            .clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.error)
+                    )
+                    Text(
+                        text = "در حال ضبط پیوسته: $durationFormatted",
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 13.sp,
+                        color = MaterialTheme.colorScheme.onErrorContainer
+                    )
+                }
+            }
+        }
 
         // Main Text Display Box
         OutlinedCard(
@@ -115,33 +145,56 @@ fun HomeScreen(
                     .padding(16.dp)
             ) {
                 if (displayText.isEmpty()) {
-                    Text(
-                        text = if (isListening) "در حال شنیدن صدای شما... صحبت کنید" else "روی دکمه میکروفون زیر بزنید تا صحبت کنید...",
-                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                        fontSize = 15.sp,
-                        lineHeight = 24.sp
-                    )
+                    Column(
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = if (isRecording) 
+                                "🎙️ در حال ضبط صدای شما... با خیال راحت صحبت کنید.\n(صدا با مکث شما قطع نمی‌شود؛ پس از پایان دکمه توقف را بزنید)"
+                            else if (isProcessingAI) 
+                                "⏳ در حال پردازش صوت با هوش مصنوعی و تبدیل به متن فارسی..."
+                            else 
+                                "روی دکمه میکروفون زیر بزنید تا ضبط شروع شود.\nصحبت‌هایتان به صورت کامل ضبط شده و پس از زدن توقف، تبدیل به متن دقیق می‌شود.",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                            fontSize = 14.sp,
+                            lineHeight = 24.sp,
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 } else {
                     Text(
                         text = displayText,
                         color = MaterialTheme.colorScheme.onSurface,
                         fontSize = 16.sp,
-                        lineHeight = 26.sp,
+                        lineHeight = 28.sp,
                         fontWeight = FontWeight.Medium
                     )
                 }
 
                 if (isProcessingAI) {
-                    CircularProgressIndicator(
+                    Column(
                         modifier = Modifier
-                            .size(32.dp)
-                            .align(Alignment.Center)
-                    )
+                            .fillMaxSize()
+                            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.85f)),
+                        verticalArrangement = Arrangement.Center,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        CircularProgressIndicator(modifier = Modifier.size(36.dp))
+                        Spacer(modifier = Modifier.height(10.dp))
+                        Text(
+                            text = "هوش مصنوعی در حال تبدیل صوت به متن...",
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.SemiBold,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
                 }
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
+        Spacer(modifier = Modifier.height(14.dp))
 
         // Quick AI Actions Row (Translate, Professionalize, Polish, Copy, Share)
         Row(
@@ -150,7 +203,7 @@ fun HomeScreen(
         ) {
             ElevatedButton(
                 onClick = { viewModel.translateCurrentText() },
-                enabled = displayText.isNotBlank() && !isProcessingAI,
+                enabled = displayText.isNotBlank() && !isProcessingAI && !isRecording,
                 modifier = Modifier.weight(1f),
                 shape = RoundedCornerShape(14.dp)
             ) {
@@ -161,7 +214,7 @@ fun HomeScreen(
 
             ElevatedButton(
                 onClick = { viewModel.professionalizeCurrentText() },
-                enabled = displayText.isNotBlank() && !isProcessingAI,
+                enabled = displayText.isNotBlank() && !isProcessingAI && !isRecording,
                 modifier = Modifier.weight(1.3f),
                 shape = RoundedCornerShape(14.dp),
                 colors = ButtonDefaults.elevatedButtonColors(containerColor = MaterialTheme.colorScheme.tertiaryContainer)
@@ -176,7 +229,7 @@ fun HomeScreen(
                     if (displayText.isNotBlank()) {
                         val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                         clipboard.setPrimaryClip(ClipData.newPlainText("EchoScript", displayText))
-                        Toast.makeText(context, "کپی شد 📋", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "متن کپی شد 📋", Toast.LENGTH_SHORT).show()
                     }
                 },
                 enabled = displayText.isNotBlank()
@@ -208,50 +261,71 @@ fun HomeScreen(
             }
         }
 
-        Spacer(modifier = Modifier.height(32.dp))
+        Spacer(modifier = Modifier.height(28.dp))
 
-        // Big Touch-Friendly Mic Button with Pulsing Animation
+        // Big Touch-Friendly Mic / Stop Button
         Box(
             contentAlignment = Alignment.Center,
-            modifier = Modifier.size(140.dp)
+            modifier = Modifier.size(150.dp)
         ) {
-            if (isListening) {
+            if (isRecording) {
                 Box(
                     modifier = Modifier
-                        .size(120.dp)
+                        .size(130.dp)
                         .scale(pulseScale)
                         .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.2f))
+                        .background(MaterialTheme.colorScheme.error.copy(alpha = 0.25f))
                 )
             }
 
             FloatingActionButton(
                 onClick = {
-                    if (isListening) {
+                    if (isRecording) {
                         viewModel.stopSpeechRecognition()
                     } else {
                         onRequestPermission()
                     }
                 },
                 shape = CircleShape,
-                modifier = Modifier.size(86.dp),
-                containerColor = if (isListening) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(92.dp),
+                containerColor = if (isRecording) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
                 contentColor = Color.white
             ) {
-                Icon(
-                    imageVector = if (isListening) Icons.Default.Stop else Icons.Default.Mic,
-                    contentDescription = if (isListening) "توقف ضبط" else "شروع صحبت",
-                    modifier = Modifier.size(38.dp)
-                )
+                if (isProcessingAI) {
+                    CircularProgressIndicator(
+                        color = Color.white,
+                        modifier = Modifier.size(36.dp),
+                        strokeWidth = 3.dp
+                    )
+                } else {
+                    Icon(
+                        imageVector = if (isRecording) Icons.Default.Stop else Icons.Default.Mic,
+                        contentDescription = if (isRecording) "توقف ضبط و تبدیل به متن" else "شروع ضبط صدا",
+                        modifier = Modifier.size(42.dp)
+                    )
+                }
             }
         }
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(10.dp))
 
         Text(
-            text = if (isListening) "در حال ضبط... لمس کنید تا متوقف شود" else "برای شروع صحبت دکمه را لمس کنید",
+            text = if (isRecording) "🔴 در حال ضبط... پس از پایان صحبت، دکمه را لمس کنید تا به متن تبدیل شود"
+                   else if (isProcessingAI) "⏳ در حال پردازش و استخراج متن با هوش مصنوعی..."
+                   else "برای شروع ضبط صدا دکمه را لمس کنید",
             fontSize = 13.sp,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+            fontWeight = if (isRecording) FontWeight.Bold else FontWeight.Normal,
+            color = if (isRecording) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(modifier = Modifier.height(6.dp))
+
+        Text(
+            text = "ویژگی ضبط پیوسته: صدا با مکث‌های شما قطع نمی‌شود و تا زمان لمس توقف ادامه دارد.",
+            fontSize = 11.sp,
+            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+            textAlign = TextAlign.Center
         )
     }
 }

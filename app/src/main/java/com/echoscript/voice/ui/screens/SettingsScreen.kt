@@ -22,6 +22,9 @@ import com.echoscript.voice.viewmodel.MainViewModel
 fun SettingsScreen(viewModel: MainViewModel) {
     val selectedLang by viewModel.selectedLanguage.collectAsState()
     val promptEnhancerEnabled by viewModel.promptEnhancerEnabled.collectAsState()
+    val currentApiKey by viewModel.apiKey.collectAsState()
+    var inputKey by remember(currentApiKey) { mutableStateOf(currentApiKey) }
+    var keySavedMessage by remember { mutableStateOf("") }
 
     Column(
         modifier = Modifier
@@ -36,6 +39,64 @@ fun SettingsScreen(viewModel: MainViewModel) {
         )
 
         Spacer(modifier = Modifier.height(20.dp))
+
+        // Gemini API Key Setting Card
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(16.dp),
+            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.Default.Key, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("کلید هوش مصنوعی (Gemini API Key)", fontWeight = FontWeight.Bold)
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "برای تبدیل صوت ضبط‌شده به متن با هوش مصنوعی بدون قطعی و با بالاترین دقت، کلید خود را وارد کنید:",
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+                OutlinedTextField(
+                    value = inputKey,
+                    onValueChange = { inputKey = it },
+                    placeholder = { Text("AIzaSy...") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    shape = RoundedCornerShape(12.dp)
+                )
+                Spacer(modifier = Modifier.height(10.dp))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    if (keySavedMessage.isNotBlank()) {
+                        Text(
+                            text = keySavedMessage,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    } else {
+                        Spacer(modifier = Modifier.width(1.dp))
+                    }
+                    Button(
+                        onClick = {
+                            viewModel.setApiKey(inputKey.trim())
+                            keySavedMessage = "کلید با موفقیت ذخیره شد ✅"
+                        },
+                        shape = RoundedCornerShape(12.dp)
+                    ) {
+                        Text("ذخیره کلید")
+                    }
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
 
         // Language Setting
         Card(
