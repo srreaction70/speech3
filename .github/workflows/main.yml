@@ -74,6 +74,7 @@ jobs:
           python3 -c '
           import glob, re
 
+          # 1. اصلاح HomeScreen.kt
           for path in glob.glob("app/src/main/java/**/HomeScreen.kt", recursive=True):
               with open(path, "r", encoding="utf-8") as f:
                   code = f.read()
@@ -84,6 +85,7 @@ jobs:
               with open(path, "w", encoding="utf-8") as f:
                   f.write(code)
 
+          # 2. اصلاح FloatingVoiceBubbleService.kt
           for path in glob.glob("app/src/main/java/**/FloatingVoiceBubbleService.kt", recursive=True):
               with open(path, "r", encoding="utf-8") as f:
                   code = f.read()
@@ -94,6 +96,7 @@ jobs:
               with open(path, "w", encoding="utf-8") as f:
                   f.write(code)
 
+          # 3. اصلاح GeminiRepository.kt
           for path in glob.glob("app/src/main/java/**/GeminiRepository.kt", recursive=True):
               with open(path, "r", encoding="utf-8") as f:
                   code = f.read()
@@ -103,6 +106,17 @@ jobs:
                   code = code[:idx] + helper + code[idx:]
               with open(path, "w", encoding="utf-8") as f:
                   f.write(code)
+
+          # 4. اصلاح خودکار ارور Key در SettingsScreen.kt
+          for path in glob.glob("app/src/main/java/**/SettingsScreen.kt", recursive=True):
+              with open(path, "r", encoding="utf-8") as f:
+                  code = f.read()
+              code = re.sub(r"Icons\.(Default|Filled|Outlined)\.Key\b", "Icons.Default.Settings", code)
+              code = re.sub(r"leadingIcon\s*=\s*\{[^}]*\bKey\b[^}]*\},?", "", code)
+              code = re.sub(r"\bKey\.Enter\b", "androidx.compose.ui.input.key.Key.Enter", code)
+              with open(path, "w", encoding="utf-8") as f:
+                  f.write(code)
+              print("Fixed SettingsScreen.kt")
           '
 
       - name: Build APK
