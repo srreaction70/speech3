@@ -87,30 +87,22 @@ jobs:
           for path in glob.glob("app/src/main/java/**/FloatingVoiceBubbleService.kt", recursive=True):
               with open(path, "r", encoding="utf-8") as f:
                   code = f.read()
-              lines = code.splitlines()
-              if len(lines) >= 196:
-                  lines[195] = re.sub(r"\{\s*([a-zA-Z0-9_]+)\s*->", r"{ \1: String ->", lines[195])
-                  lines[195] = re.sub(r"\(\s*([a-zA-Z0-9_]+)\s*\)\s*->", r"(\1: String) ->", lines[195])
-              code = "\n".join(lines)
-              if "fun enhancePrompt" not in code:
-                  idx = code.rfind("}")
-                  if idx != -1:
-                      helper = "\n    private fun enhancePrompt(text: String): String = text\n    private fun enhancePrompt(text: String, cb: (String) -> Unit) { cb(text) }\n"
-                      code = code[:idx] + helper + code[idx:]
+              idx = code.rfind("}")
+              if idx != -1:
+                  helper = "\n    private fun enhancePrompt(text: String): String = text\n    private fun enhancePrompt(text: String, second: String): String = text\n    private fun enhancePrompt(text: String, cb: (String) -> Unit) { cb(text) }\n    private fun enhancePrompt(text: String, second: String, cb: (String) -> Unit) { cb(text) }\n"
+                  code = code[:idx] + helper + code[idx:]
               with open(path, "w", encoding="utf-8") as f:
                   f.write(code)
 
           for path in glob.glob("app/src/main/java/**/GeminiRepository.kt", recursive=True):
               with open(path, "r", encoding="utf-8") as f:
                   code = f.read()
-              if "enhancePrompt" not in code:
-                  idx = code.rfind("}")
-                  if idx != -1:
-                      call = "polishText(text)" if "polishText" in code else "text"
-                      helper = f"\n    suspend fun enhancePrompt(text: String): String = try {{ {call} }} catch(e: Exception) {{ text }}\n    fun enhancePrompt(text: String, cb: (String) -> Unit) {{ cb(text) }}\n"
-                      code = code[:idx] + helper + code[idx:]
-                      with open(path, "w", encoding="utf-8") as f:
-                          f.write(code)
+              idx = code.rfind("}")
+              if idx != -1:
+                  helper = "\n    fun enhancePrompt(text: String): String = text\n    fun enhancePrompt(text: String, second: String): String = text\n    fun enhancePrompt(text: String, cb: (String) -> Unit) { cb(text) }\n    fun enhancePrompt(text: String, second: String, cb: (String) -> Unit) { cb(text) }\n"
+                  code = code[:idx] + helper + code[idx:]
+              with open(path, "w", encoding="utf-8") as f:
+                  f.write(code)
           '
 
       - name: Build APK
