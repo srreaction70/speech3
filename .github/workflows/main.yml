@@ -25,8 +25,10 @@ jobs:
         with:
           gradle-version: '8.10.2'
 
-      - name: Enable AndroidX
-        run: echo "android.useAndroidX=true" >> gradle.properties
+      - name: Configure Memory and AndroidX
+        run: |
+          echo "android.useAndroidX=true" >> gradle.properties
+          echo "org.gradle.jvmargs=-Xmx4096m -XX:+UseG1GC" >> gradle.properties
 
       - name: Generate Missing Android Resources and Fix Layouts
         run: |
@@ -72,7 +74,6 @@ jobs:
           python3 -c '
           import glob, re
 
-          # 1. اصلاح رنگ در HomeScreen.kt
           for path in glob.glob("app/src/main/java/**/HomeScreen.kt", recursive=True):
               with open(path, "r", encoding="utf-8") as f:
                   code = f.read()
@@ -82,9 +83,7 @@ jobs:
                   code = "import androidx.compose.ui.graphics.Color\n" + code
               with open(path, "w", encoding="utf-8") as f:
                   f.write(code)
-              print("Fixed HomeScreen.kt")
 
-          # 2. اصلاح خطاهای متد و لامبدا در FloatingVoiceBubbleService.kt
           for path in glob.glob("app/src/main/java/**/FloatingVoiceBubbleService.kt", recursive=True):
               with open(path, "r", encoding="utf-8") as f:
                   code = f.read()
@@ -100,9 +99,7 @@ jobs:
                       code = code[:idx] + helper + code[idx:]
               with open(path, "w", encoding="utf-8") as f:
                   f.write(code)
-              print("Fixed FloatingVoiceBubbleService.kt")
 
-          # 3. افزودن تابع جایگزین به GeminiRepository
           for path in glob.glob("app/src/main/java/**/GeminiRepository.kt", recursive=True):
               with open(path, "r", encoding="utf-8") as f:
                   code = f.read()
@@ -114,11 +111,10 @@ jobs:
                       code = code[:idx] + helper + code[idx:]
                       with open(path, "w", encoding="utf-8") as f:
                           f.write(code)
-                      print("Added enhancePrompt to GeminiRepository.kt")
           '
 
       - name: Build APK
-        run: gradle assembleDebug
+        run: gradle assembleDebug --no-daemon
 
       - name: Upload Debug APK Artifact
         uses: actions/upload-artifact@v4
