@@ -28,9 +28,10 @@ jobs:
       - name: Enable AndroidX
         run: echo "android.useAndroidX=true" >> gradle.properties
 
-      - name: Generate Missing Android Resources
+      - name: Generate Missing Android Resources and Fix Layouts
         run: |
           mkdir -p app/src/main/res/xml app/src/main/res/values app/src/main/res/mipmap
+          
           cat << 'EOF' > app/src/main/res/xml/data_extraction_rules.xml
           <?xml version="1.0" encoding="utf-8"?>
           <data-extraction-rules>
@@ -47,7 +48,10 @@ jobs:
           cat << 'EOF' > app/src/main/res/values/themes.xml
           <?xml version="1.0" encoding="utf-8"?>
           <resources>
-              <style name="Theme.EchoScriptVoice" parent="android:Theme.Material.Light.NoActionBar" />
+              <attr name="selectableItemBackgroundBorderless" format="reference" />
+              <style name="Theme.EchoScriptVoice" parent="android:Theme.Material.Light.NoActionBar">
+                  <item name="selectableItemBackgroundBorderless">?android:attr/selectableItemBackgroundBorderless</item>
+              </style>
           </resources>
           EOF
 
@@ -59,6 +63,9 @@ jobs:
           EOF
 
           cp app/src/main/res/mipmap/ic_launcher.xml app/src/main/res/mipmap/ic_launcher_round.xml
+
+          find app/src/main/res/ -type f -name "*.xml" -exec sed -i 's/?attr\/selectableItemBackgroundBorderless/?android:attr\/selectableItemBackgroundBorderless/g' {} +
+          find app/src/main/res/ -type f -name "*.xml" -exec sed -i 's/?selectableItemBackgroundBorderless/?android:attr\/selectableItemBackgroundBorderless/g' {} +
 
       - name: Build APK
         run: gradle assembleDebug
