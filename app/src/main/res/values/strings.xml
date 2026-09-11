@@ -1,0 +1,6 @@
+<resources>
+    <string name="app_name">EchoScript Voice</string>
+    <string name="title_home">گفتار به متن</string>
+    <string name="title_prompts">استودیو پرامپت</string>
+    <string name="title_settings">تنظیمات</string>
+</resources>

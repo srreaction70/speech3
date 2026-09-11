@@ -1,0 +1,141 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:clipChildren="false"
+    android:clipToPadding="false"
+    android:padding="12dp">
+
+    <!-- Center Floating Hub Button with Pulsing Wave Indicator -->
+    <FrameLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:clipChildren="false"
+        android:clipToPadding="false">
+
+        <!-- Pulse Ring for active voice recording -->
+        <View
+            android:id="@+id/view_pulse_ring"
+            android:layout_width="76dp"
+            android:layout_height="76dp"
+            android:layout_gravity="center"
+            android:background="@drawable/bg_floating_circle"
+            android:alpha="0.3"
+            android:visibility="gone" />
+
+        <!-- Main Center Action Disc (Assistive Touch) -->
+        <FrameLayout
+            android:layout_width="62dp"
+            android:layout_height="62dp"
+            android:layout_gravity="center"
+            android:background="@drawable/bg_floating_circle"
+            android:elevation="14dp">
+
+            <ImageView
+                android:id="@+id/img_center_hub"
+                android:layout_width="34dp"
+                android:layout_height="34dp"
+                android:layout_gravity="center"
+                android:src="@android:drawable/ic_btn_speak_now"
+                android:tint="#FFFFFF"
+                android:contentDescription="EchoScript Floating Hub" />
+        </FrameLayout>
+    </FrameLayout>
+
+    <!-- Expandable Multi-Action Hub Bar (Appears on click) -->
+    <LinearLayout
+        android:id="@+id/layout_radial_menu"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:background="@drawable/bg_floating_bar"
+        android:padding="6dp"
+        android:layout_marginTop="8dp"
+        android:elevation="16dp"
+        android:gravity="center"
+        android:visibility="gone">
+
+        <!-- 1. Mic Recording -->
+        <ImageView
+            android:id="@+id/btn_action_mic"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:padding="6dp"
+            android:src="@android:drawable/ic_btn_speak_now"
+            android:tint="#10B981"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="شروع ضبط صدا" />
+
+        <!-- 2. AI 1-Tap Translate -->
+        <ImageView
+            android:id="@+id/btn_action_translate"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:padding="6dp"
+            android:src="@android:drawable/ic_menu_search"
+            android:tint="#4F46E5"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="ترجمه هوشمند" />
+
+        <!-- 3. AI Prompt Builder -->
+        <ImageView
+            android:id="@+id/btn_action_prompt"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:padding="6dp"
+            android:src="@android:drawable/ic_menu_edit"
+            android:tint="#8B5CF6"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="پرامپت‌ساز هوش مصنوعی" />
+
+        <!-- 4. Polish & Formality -->
+        <ImageView
+            android:id="@+id/btn_action_polish"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:padding="6dp"
+            android:src="@android:drawable/ic_menu_manage"
+            android:tint="#F59E0B"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="اصلاح و پالایش لحن" />
+
+        <!-- 5. 1-Tap Clipboard Copy -->
+        <ImageView
+            android:id="@+id/btn_action_copy"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:padding="6dp"
+            android:src="@android:drawable/ic_menu_save"
+            android:tint="#0284C7"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="کپی در کلیپ‌بورد" />
+
+        <!-- 6. Close / Minimize -->
+        <ImageView
+            android:id="@+id/btn_action_close"
+            android:layout_width="34dp"
+            android:layout_height="34dp"
+            android:padding="6dp"
+            android:src="@android:drawable/ic_menu_close_clear_cancel"
+            android:tint="#EF4444"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="بستن منو" />
+    </LinearLayout>
+
+    <!-- Live Floating Text Preview Bubble -->
+    <TextView
+        android:id="@+id/txt_bubble_preview"
+        android:layout_width="230dp"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_floating_bar"
+        android:padding="10dp"
+        android:layout_marginTop="6dp"
+        android:textColor="#0F172A"
+        android:textSize="12sp"
+        android:elevation="14dp"
+        android:gravity="right"
+        android:visibility="gone" />
+
+</LinearLayout>
